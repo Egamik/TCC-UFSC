@@ -16,7 +16,7 @@ func (t *EHealth) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 	fn, args := stub.GetFunctionAndParameters()
 
 	switch fn {
-	case "AddIdentity":
+	case "CreateRecord":
 		if len(args) != 1 {
 			return peer.Response{
 				Status:  500,
@@ -28,6 +28,46 @@ func (t *EHealth) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 			Status:  200,
 			Payload: nil,
 		}
+
+	case "RemoveRecord":
+		if len(args) != 1 {
+			return peer.Response{
+				Status:  500,
+				Message: "Missing arguments",
+				Payload: nil,
+			}
+		}
+		return peer.Response{
+			Status:  200,
+			Payload: nil,
+		}
+
+	case "AddPrescription":
+		if len(args) != 1 {
+			return peer.Response{
+				Status:  500,
+				Message: "Missing arguments",
+				Payload: nil,
+			}
+		}
+		return peer.Response{
+			Status:  200,
+			Payload: nil,
+		}
+
+	case "AddAppointment":
+		if len(args) != 1 {
+			return peer.Response{
+				Status:  500,
+				Message: "Missing arguments",
+				Payload: nil,
+			}
+		}
+		return peer.Response{
+			Status:  200,
+			Payload: nil,
+		}
+
 	default:
 		return peer.Response{
 			Status:  500,

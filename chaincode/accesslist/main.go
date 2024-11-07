@@ -28,6 +28,46 @@ func (t *AccessList) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 			Status:  200,
 			Payload: nil,
 		}
+
+	case "RemoveIdentity":
+		if len(args) != 1 {
+			return peer.Response{
+				Status:  500,
+				Message: "Missing arguments",
+				Payload: nil,
+			}
+		}
+		return peer.Response{
+			Status:  200,
+			Payload: nil,
+		}
+
+	case "IsIdentityApproved":
+		if len(args) != 1 {
+			return peer.Response{
+				Status:  500,
+				Message: "Missing arguments",
+				Payload: nil,
+			}
+		}
+		return peer.Response{
+			Status:  200,
+			Payload: nil,
+		}
+
+	case "GetIdentityList":
+		if len(args) != 1 {
+			return peer.Response{
+				Status:  500,
+				Message: "Missing arguments",
+				Payload: nil,
+			}
+		}
+		return peer.Response{
+			Status:  200,
+			Payload: nil,
+		}
+
 	default:
 		return peer.Response{
 			Status:  500,
@@ -35,4 +75,20 @@ func (t *AccessList) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 			Payload: nil,
 		}
 	}
+}
+
+func (t *AccessList) addIdentity(stub shim.ChaincodeStubInterface, id string) bool {
+	return true
+}
+
+func (t *AccessList) removeIdentity(stub shim.ChaincodeStubInterface, id string) bool {
+	return true
+}
+
+func (t *AccessList) isIdentityApproved(stub shim.ChaincodeStubInterface, id string) bool {
+	return true
+}
+
+func (t *AccessList) getIdentityList(stub shim.ChaincodeStubInterface, id string) bool {
+	return true
 }
