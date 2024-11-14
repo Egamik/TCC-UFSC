@@ -1,6 +1,6 @@
 package al_asset
 
-type AL_Asset struct {
-	PatientID  string   `json:"patientID"`
+type AccessList struct {
+	OwnerID    string   `json:"ownerID"`
 	AllowedIDs []string `json:"allowedIDs"`
 }

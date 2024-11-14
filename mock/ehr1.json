@@ -1,1 +1,59 @@
-{}
+{
+    "patientID": "e71263c9bbfa426b0be94a09e34675ace0faa38c0916d2cf6a4ac2255fb49615",
+    "prescriptions": [
+        {
+            "professionalID": "3e19ff27dcd8b0a836d8f5b1336d1e4f470027d65a07e3e4edafa2ddfaae71e6",
+            "date": "",
+            "description": "2 vezes ao dia a cada 8 horas",
+            "medication": "Paracetamol",
+            "dosage": "750mg"
+        },
+        {
+            "professionalID": "ac9e232238ccf1245f34b4ba3b5c32d35563bf066dcffeaa72e511d31a1b9147",
+            "date": "",
+            "description": "4 vezes ao dia a cada 6 horas",
+            "medication": "Insulina NPH",
+            "dosage": "3,6mg/ml"
+        }
+    ],
+    "appointments": [
+        {
+            "professionalID": "ac9e232238ccf1245f34b4ba3b5c32d35563bf066dcffeaa72e511d31a1b9147",
+            "date": "",
+            "clinicName": "Hospital Santa Luzia"
+        },
+        {
+            "professionalID": "ac9e232238ccf1245f34b4ba3b5c32d35563bf066dcffeaa72e511d31a1b9147",
+            "date": "",
+            "clinicName": "Ximira Odontologia Ltda."
+        },
+        {
+            "professionalID": "ac9e232238ccf1245f34b4ba3b5c32d35563bf066dcffeaa72e511d31a1b9147",
+            "date": "",
+            "clinicName": "Hospital Santa Luzia"
+        },
+        {
+            "professionalID": "ac9e232238ccf1245f34b4ba3b5c32d35563bf066dcffeaa72e511d31a1b9147",
+            "date": "",
+            "clinicName": "Hospital Santa Luzia"
+        },
+        {
+            "professionalID": "ac9e232238ccf1245f34b4ba3b5c32d35563bf066dcffeaa72e511d31a1b9147",
+            "date": "",
+            "clinicName": "Hospital Santa Luzia"
+        }
+    ],
+    "procedures": [
+        {
+            "professionalID": "3e19ff27dcd8b0a836d8f5b1336d1e4f470027d65a07e3e4edafa2ddfaae71e6",
+            "date": "",
+            "procedureID": "Cirurgia bariátrica",
+            "procedurePlace": "Hospital Santa Luzia",
+            "relatedProfessionals": [
+                "",
+                "",
+                ""
+            ]
+        }
+    ]
+}
