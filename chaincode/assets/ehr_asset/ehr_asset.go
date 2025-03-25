@@ -1,6 +1,7 @@
 package ehr_asset
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -33,51 +34,63 @@ type Procedure struct {
 	RelatedProfessionals []string  `json:"relatedProfessionals"`
 }
 
+/********************************************
+ * 		Prescription functions				*
+ *******************************************/
 // Validates prescription JSON string and returns struct if valid
-func validatePrescription(prescriptionJSON string) (*Prescription, error) {
+func (p *Prescription) validatePrescription(prescriptionJSON string) bool {
 
 	if prescriptionJSON == "" {
-		return nil, nil
+		return false
 	}
 
-	prescription := Prescription{
-		ProfessionalID: "",
-		Date:           time.Now(),
-		Description:    "",
-		Medication:     "",
+	var prescription Prescription
+	err := json.Unmarshal([]byte(prescriptionJSON), prescription)
+
+	if err != nil {
+		return false
 	}
 
-	return &prescription, nil
+	// Validar campos
+	return true
 }
 
+/********************************************
+ * 		Appointment functions				*
+ *******************************************/
 // Validates appointment JSON string and returns struct if valid
-func validateAppointment(appointmentJSON string) (*Appointment, error) {
+func validateAppointment(appointmentJSON string) bool {
 	if appointmentJSON == "" {
-		return nil, nil
+		return false
 	}
 
-	appointment := Appointment{
-		ProfessionalID: "",
-		Date:           time.Now(),
-		ClinicName:     "",
+	var appointment Appointment
+
+	err := json.Unmarshal([]byte(appointmentJSON), appointment)
+
+	if err != nil {
+		return false
 	}
 
-	return &appointment, nil
+	return true
 }
 
+/********************************************
+ * 		Procedure functions 				*
+ *******************************************/
 // Validates procedure JSON string and returns struct if valid
-func validateProcedure(procedureJSON string) (*Procedure, error) {
+func validateProcedure(procedureJSON string) bool {
 
 	if procedureJSON == "" {
-		return nil, nil
+		return false
 	}
 
-	procedure := Procedure{
-		ProfessionalID:       "",
-		Date:                 time.Now(),
-		ProcedureID:          "",
-		RelatedProfessionals: []string{},
+	var procedure Procedure
+	err := json.Unmarshal([]byte(procedureJSON), procedure)
+
+	if err != nil {
+		return false
 	}
 
-	return &procedure, nil
+	return true
 }

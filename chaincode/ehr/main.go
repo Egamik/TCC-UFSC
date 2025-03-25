@@ -137,24 +137,26 @@ func (t *EHealth) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 }
 
 func createRecord(stub shim.ChaincodeStubInterface, ownerID string) error {
-
-	return nil
-}
-
-func addPrescription(stub shim.ChaincodeStubInterface, ownerID string, prescriptionJSON string) error {
 	exists := recordExists(stub, ownerID)
 
-	if !exists {
+	if exists {
 		return nil
 	}
 
-	recordBytes, err := stub.GetState(ownerID)
+	asset := ehr_asset.EHR_Asset{
+		PatientID:     ownerID,
+		Prescriptions: []ehr_asset.Prescription{},
+		Appointments:  []ehr_asset.Appointment{},
+		Procedures:    []ehr_asset.Procedure{},
+	}
 
-	var ehrRecord ehr_asset.EHR_Asset
+	assetBytes, err := json.Marshal(asset)
 
-	err = json.Unmarshal(recordBytes, &ehrRecord)
+	if err != nil {
+		return nil
+	}
 
-	for _,
+	err = stub.PutState(ownerID, assetBytes)
 
 	if err != nil {
 		return nil
@@ -163,11 +165,47 @@ func addPrescription(stub shim.ChaincodeStubInterface, ownerID string, prescript
 	return nil
 }
 
-func addAppointment(stub shim.ChaincodeStubInterface, ownerID string, appointment string) error {
+func addPrescription(stub shim.ChaincodeStubInterface, ownerID string, prescriptionJSON string) error {
+	// Check if record exists
+	exists := recordExists(stub, ownerID)
+
+	if !exists {
+		return nil
+	}
+
+	// Read record from world state
+	recordBytes, err := stub.GetState(ownerID)
+
+	if err != nil {
+		return nil
+	}
+
+	var ehrRecord ehr_asset.EHR_Asset
+
+	err = json.Unmarshal(recordBytes, &ehrRecord)
+
+	if err != nil {
+		return nil
+	}
+
+	// Unmarshal prescription data
+	var prescription ehr_asset.Prescription
+	err = json.Unmarshal(([]byte)(prescriptionJSON), prescription)
+
+	if err != nil {
+		return nil
+	}
+
+	// ehr_asset.validatePrescription()
+
 	return nil
 }
 
-func addProcedure(stub shim.ChaincodeStubInterface, ownerID string, procedure string) error {
+func addAppointment(stub shim.ChaincodeStubInterface, ownerID string, appointmentJSON string) error {
+	return nil
+}
+
+func addProcedure(stub shim.ChaincodeStubInterface, ownerID string, procedureJSON string) error {
 	return nil
 }
 
