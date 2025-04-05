@@ -38,30 +38,30 @@ type Procedure struct {
  * 		Prescription functions				*
  *******************************************/
 // Validates prescription JSON string and returns struct if valid
-func (p *Prescription) validatePrescription(prescriptionJSON string) bool {
+func (p *Prescription) validatePrescription(prescriptionJSON string) (string, error) {
 
 	if prescriptionJSON == "" {
-		return false
+		return "", nil
 	}
 
 	var prescription Prescription
 	err := json.Unmarshal([]byte(prescriptionJSON), prescription)
 
 	if err != nil {
-		return false
+		return "", err
 	}
 
 	// Validar campos
-	return true
+	return "", nil
 }
 
 /********************************************
  * 		Appointment functions				*
  *******************************************/
 // Validates appointment JSON string and returns struct if valid
-func validateAppointment(appointmentJSON string) bool {
+func (a *Appointment) validateAppointment(appointmentJSON string) (string, error) {
 	if appointmentJSON == "" {
-		return false
+		return "", nil
 	}
 
 	var appointment Appointment
@@ -69,28 +69,28 @@ func validateAppointment(appointmentJSON string) bool {
 	err := json.Unmarshal([]byte(appointmentJSON), appointment)
 
 	if err != nil {
-		return false
+		return "", nil
 	}
 
-	return true
+	return "", nil
 }
 
 /********************************************
  * 		Procedure functions 				*
  *******************************************/
 // Validates procedure JSON string and returns struct if valid
-func validateProcedure(procedureJSON string) bool {
+func (p *Procedure) validateProcedure(procedureJSON string) (string, error) {
 
 	if procedureJSON == "" {
-		return false
+		return "", nil
 	}
 
 	var procedure Procedure
 	err := json.Unmarshal([]byte(procedureJSON), procedure)
 
 	if err != nil {
-		return false
+		return "", nil
 	}
 
-	return true
+	return "", nil
 }

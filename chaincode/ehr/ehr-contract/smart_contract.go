@@ -74,6 +74,9 @@ func (s *EHRContract) addPrescription(ctx contractapi.TransactionContextInterfac
 }
 
 func (s *EHRContract) addAppointment(ctx contractapi.TransactionContextInterface, ownerID string, appointmentJSON string) error {
+	var appointment ehr_asset.Appointment
+
+	appointment.validateAppointment(appointmentJSON)
 	return nil
 }
 

@@ -7,72 +7,48 @@ import (
 
 type ChaincodeError interface {
 	error
-	Info() Payload
-	Log() string
 	Error() string
 }
 
-type Payload struct {
-	ID      string      `json:"id"`
-	Status  int32       `json:"status"`
-	Message string      `json:"message"`
-	Payload interface{} `json:"payload"`
-}
-
-const wrapperString = "Error: %s.\nErrorStatus: %d.\nErrorMessage: %s.\nDebugStack: %s"
+const wrapperString = "Error: %s.\nDebugStack: %s"
 
 type MarshallingError struct {
 	FuncName     string
+	Message      string
 	WrappedError error
-	ErrorData    Payload
 	Stack        []byte
 }
 
 func NewMarshallingError(funcName string, structName string, err error) *MarshallingError {
-	const msgTemplate = "%s: Não foi possível converter a struct %s."
+	const msgTemplate = "[%s] Não foi possível converter a struct [%s]."
 	return &MarshallingError{
-		ErrorData: Payload{
-			ID:      "MarshallError",
-			Status:  400,
-			Message: fmt.Sprintf(msgTemplate, funcName, structName),
-			Payload: nil,
-		},
 		FuncName:     funcName,
+		Message:      msgTemplate,
 		WrappedError: err,
 		Stack:        debug.Stack(),
 	}
 }
 
-func (err *MarshallingError) Info() Payload {
-	return err.ErrorData
-}
-
-func (err *MarshallingError) Log() string {
-	return fmt.Sprintf(wrapperString, err.ErrorData.ID, err.ErrorData.Status, err.ErrorData.Message, err.Stack)
-}
-
 func (err *MarshallingError) Error() string {
-	return err.ErrorData.Message
+	return fmt.Sprintf(wrapperString, err.FuncName, err.Stack)
 }
 
 func (err *MarshallingError) Unwrap() error {
 	return err.WrappedError
 }
 
+//**************************************************************************
+
 type ValidationError struct {
 	FuncName     string
+	Message      string
 	WrappedError error
-	ErrorData    Payload
 	Stack        []byte
 }
 
-var validationErrors = map[string]string{
-	"": "%s:",
-}
-
 func NewValidationError(funcName string, errID string, extendedMsg string, err error) *ValidationError {
-	var msgTemplate = validationErrors[errID]
 
+	const msgTemplate = "[%s] Erro de validação: %s"
 	var errorMsg = ""
 	if extendedMsg == "" {
 		errorMsg = fmt.Sprintf(msgTemplate, funcName)
@@ -81,30 +57,124 @@ func NewValidationError(funcName string, errID string, extendedMsg string, err e
 	}
 
 	return &ValidationError{
-		ErrorData: Payload{
-			ID:      "ValidationError",
-			Status:  400,
-			Message: errorMsg,
-			Payload: nil,
-		},
+		FuncName:     funcName,
+		Message:      errorMsg,
+		WrappedError: err,
+		Stack:        debug.Stack(),
+	}
+}
+
+func (err *ValidationError) Error() string {
+	return err.Message
+}
+
+func (err *ValidationError) Unwrap() error {
+	return err.WrappedError
+}
+
+//**************************************************************************
+
+type ReadWorldStateError struct {
+	FuncName     string
+	Message      string
+	WrappedError error
+	Stack        []byte
+}
+
+func NewReadWorldStateError(funcName string, err error) *ReadWorldStateError {
+	const msgTemplate = "[%s] Não foi possivel ler o World State"
+	return &ReadWorldStateError{
 		FuncName:     funcName,
 		WrappedError: err,
 		Stack:        debug.Stack(),
 	}
 }
 
-func (err *ValidationError) Info() Payload {
-	return err.ErrorData
+func (err *ReadWorldStateError) Error() string {
+	return err.Message
 }
 
-func (err *ValidationError) Log() string {
-	return fmt.Sprintf(wrapperString, err.ErrorData.ID, err.ErrorData.Status, err.ErrorData.Message, err.Stack)
+func (err *ReadWorldStateError) Unwrap() error {
+	return err.WrappedError
 }
 
-func (err *ValidationError) Error() string {
-	return err.ErrorData.Message
+//**************************************************************************
+
+type WriteWorldStateError struct {
+	FuncName     string
+	Message      string
+	WrappedError error
+	Stack        []byte
 }
 
-func (err *ValidationError) Unwrap() error {
+func NewWriteWorldStateError(funcName string, err error) *WriteWorldStateError {
+	const msgTemplate = "[%s] Não foi possivel escrever no World State"
+	return &WriteWorldStateError{
+		FuncName:     funcName,
+		Message:      fmt.Sprintf(msgTemplate, funcName),
+		WrappedError: err,
+		Stack:        debug.Stack(),
+	}
+}
+
+func (err *WriteWorldStateError) Error() string {
+	return err.Message
+}
+
+func (err *WriteWorldStateError) Unwrap() error {
+	return err.WrappedError
+}
+
+//**************************************************************************
+
+type UpdateWorldStateError struct {
+	FuncName     string
+	Message      string
+	WrappedError error
+	Stack        []byte
+}
+
+func NewUpdateWorldStateError(funcName string, err error) *UpdateWorldStateError {
+	const msgTemplate = "[%s] Não foi possivel fazer update no World State"
+	return &UpdateWorldStateError{
+		FuncName:     funcName,
+		Message:      fmt.Sprintf(msgTemplate, funcName),
+		WrappedError: err,
+		Stack:        debug.Stack(),
+	}
+}
+
+func (err *UpdateWorldStateError) Error() string {
+	return err.Message
+}
+
+func (err *UpdateWorldStateError) Unwrap() error {
+	return err.WrappedError
+}
+
+//**************************************************************************
+
+type GenericError struct {
+	FuncName     string
+	Message      string
+	WrappedError error
+	Stack        []byte
+}
+
+func NewGenericError(funcName string, err error) *GenericError {
+	const msgTemplate = "[%s] Não foi possivel fazer update no World State"
+	return &GenericError{
+		FuncName:     funcName,
+		Message:      fmt.Sprintf(msgTemplate, funcName),
+		WrappedError: err,
+		Stack:        debug.Stack(),
+	}
+}
+
+func (err *GenericError) Error() string {
+	return err.Message
+}
+
+func (err *GenericError) Unwrap() error {
 	return err.WrappedError
 }
