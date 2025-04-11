@@ -6,6 +6,7 @@ toolchain go1.24.2
 
 require (
 	ehr_asset v1.0.0
+	chaincodeErrors v1.0.0
 	github.com/hyperledger/fabric-contract-api-go/v2 v2.2.0
 )
 

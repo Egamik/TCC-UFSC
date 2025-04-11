@@ -178,3 +178,30 @@ func (err *GenericError) Error() string {
 func (err *GenericError) Unwrap() error {
 	return err.WrappedError
 }
+
+//**************************************************************************
+
+type AssetNotFoundError struct {
+	FuncName     string
+	Message      string
+	WrappedError error
+	Stack        []byte
+}
+
+func NewAssetNotFoundError(funcName string, assetID string, err error) *GenericError {
+	const msgTemplate = "[%s] Não foi encontrado o asset %s."
+	return &GenericError{
+		FuncName:     funcName,
+		Message:      fmt.Sprintf(msgTemplate, funcName, assetID),
+		WrappedError: err,
+		Stack:        debug.Stack(),
+	}
+}
+
+func (err *AssetNotFoundError) Error() string {
+	return err.Message
+}
+
+func (err *AssetNotFoundError) Unwrap() error {
+	return err.WrappedError
+}
