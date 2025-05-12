@@ -211,6 +211,7 @@ func verifyOwner(ctx contractapi.TransactionContextInterface, expectedOwnerID st
 	}
 
 	actualOwnerID, found, err := clientIdentity.GetAttributeValue("personId")
+
 	if err != nil {
 		return fmt.Errorf("error reading 'personId' attribute: %v", err)
 	}

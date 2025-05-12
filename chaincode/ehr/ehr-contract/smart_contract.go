@@ -7,6 +7,7 @@ import (
 
 	chaincodeErrors "chaincodeErrors"
 
+	"github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 	"github.com/hyperledger/fabric-contract-api-go/v2/contractapi"
 )
 
@@ -20,20 +21,27 @@ func (s *EHRContract) createRecord(ctx contractapi.TransactionContextInterface, 
 	exists, err := s.recordExists(ctx, ownerID)
 
 	// For a professional to create a record they must be authorized previously
-	issuerID, foundIssuer, err := ctx.GetClientIdentity().GetAttributeValue("")
+	issuerID, err := cid.New(ctx.GetStub())
 
-	if !foundIssuer || err {
-		return chaincodeErrors.NewAssetNotFoundError(funcName, "professionalID", err)
+	issuerCrtID, found, err := issuerID.GetAttributeValue("personID")
+
+	if err != nil {
+		return chaincodeErrors.NewGenericError(funcName, err)
 	}
 
-	isAllowed, err := ctx.GetStub().InvokeChaincode("AccessList", []byte{ownerID, issuerID}, "access_chanel")
+	if !found {
+		return chaincodeErrors.NewGenericError(funcName, err)
+	}
+
+	alResponse := ctx.GetStub().InvokeChaincode("AccessList", ToChaincodeArgs("isIdentityApproved", ownerID, issuerCrtID), "access_chanel")
 
 	if !isAllowed {
 		return chaincodeErrors.NewForbiddenAccessError(funcName, issuerID, nil)
 	}
 
 	if err != nil {
-		return chaincodeErrors.New
+		// return chaincodeErrors.New
+		return nil
 	}
 
 	if exists {

@@ -5,8 +5,9 @@ go 1.22.0
 toolchain go1.24.2
 
 require (
-	ehr_asset v1.0.0
 	chaincodeErrors v1.0.0
+	ehr_asset v1.0.0
+	github.com/hyperledger/fabric-chaincode-go v0.0.0-20240704073638-9fb89180dc17
 	github.com/hyperledger/fabric-contract-api-go/v2 v2.2.0
 )
 
@@ -15,7 +16,9 @@ require (
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/spec v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/hyperledger/fabric-chaincode-go/v2 v2.3.0 // indirect
+	github.com/hyperledger/fabric-protos-go v0.3.3 // indirect
 	github.com/hyperledger/fabric-protos-go-apiv2 v0.3.6 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
