@@ -152,6 +152,32 @@ func (err *UpdateWorldStateError) Unwrap() error {
 	return err.WrappedError
 }
 
+// **************************************************************************
+type InvokeChaincodeError struct {
+	FuncName     string
+	Message      string
+	WrappedError error
+	Stack        []byte
+}
+
+func NewInvokeChaincodeError(funcName string, assetID string, err error) *InvokeChaincodeError {
+	const msgTemplate = "[%s] O ID %s não possui acesso ao recurso."
+	return &InvokeChaincodeError{
+		FuncName:     funcName,
+		Message:      fmt.Sprintf(msgTemplate, funcName, assetID),
+		WrappedError: err,
+		Stack:        debug.Stack(),
+	}
+}
+
+func (err *InvokeChaincodeError) Error() string {
+	return err.Message
+}
+
+func (err *InvokeChaincodeError) Unwrap() error {
+	return err.WrappedError
+}
+
 //**************************************************************************
 
 type GenericError struct {
@@ -188,9 +214,9 @@ type AssetNotFoundError struct {
 	Stack        []byte
 }
 
-func NewAssetNotFoundError(funcName string, assetID string, err error) *GenericError {
+func NewAssetNotFoundError(funcName string, assetID string, err error) *AssetNotFoundError {
 	const msgTemplate = "[%s] Não foi encontrado o asset %s."
-	return &GenericError{
+	return &AssetNotFoundError{
 		FuncName:     funcName,
 		Message:      fmt.Sprintf(msgTemplate, funcName, assetID),
 		WrappedError: err,
@@ -203,5 +229,31 @@ func (err *AssetNotFoundError) Error() string {
 }
 
 func (err *AssetNotFoundError) Unwrap() error {
+	return err.WrappedError
+}
+
+// **************************************************************************
+type ForbiddenAccessError struct {
+	FuncName     string
+	Message      string
+	WrappedError error
+	Stack        []byte
+}
+
+func NewForbiddenAccessError(funcName string, assetID string, err error) *ForbiddenAccessError {
+	const msgTemplate = "[%s] O ID %s não possui acesso ao recurso."
+	return &ForbiddenAccessError{
+		FuncName:     funcName,
+		Message:      fmt.Sprintf(msgTemplate, funcName, assetID),
+		WrappedError: err,
+		Stack:        debug.Stack(),
+	}
+}
+
+func (err *ForbiddenAccessError) Error() string {
+	return err.Message
+}
+
+func (err *ForbiddenAccessError) Unwrap() error {
 	return err.WrappedError
 }

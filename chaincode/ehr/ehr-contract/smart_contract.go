@@ -3,6 +3,7 @@ package ehr_contract
 import (
 	"ehr_asset"
 	"encoding/json"
+	"fmt"
 
 	chaincodeErrors "chaincodeErrors"
 
@@ -18,8 +19,21 @@ func (s *EHRContract) createRecord(ctx contractapi.TransactionContextInterface, 
 	funcName := "CreateRecord"
 	exists, err := s.recordExists(ctx, ownerID)
 
+	// For a professional to create a record they must be authorized previously
+	issuerID, foundIssuer, err := ctx.GetClientIdentity().GetAttributeValue("")
+
+	if !foundIssuer || err {
+		return chaincodeErrors.NewAssetNotFoundError(funcName, "professionalID", err)
+	}
+
+	isAllowed, err := ctx.GetStub().InvokeChaincode("AccessList", []byte{ownerID, issuerID}, "access_chanel")
+
+	if !isAllowed {
+		return chaincodeErrors.NewForbiddenAccessError(funcName, issuerID, nil)
+	}
+
 	if err != nil {
-		return err
+		return chaincodeErrors.New
 	}
 
 	if exists {
@@ -205,25 +219,66 @@ func (s *EHRContract) addProcedure(ctx contractapi.TransactionContextInterface, 
 }
 
 // Read owner's complete record
-func (s *EHRContract) readRecord(ctx contractapi.TransactionContextInterface, ownerID string) (ehr_asset.EHR_Asset, error) {
+func (s *EHRContract) readRecord(ctx contractapi.TransactionContextInterface, ownerID string) (*ehr_asset.EHR_Asset, error) {
 	funcName := "ReadRecord"
 	var record ehr_asset.EHR_Asset
-	return record, nil
+
+	recordBytes, err := ctx.GetStub().GetState(ownerID)
+
+	if err != nil {
+		return nil, chaincodeErrors.NewReadWorldStateError(funcName, err)
+	}
+
+	err = json.Unmarshal(recordBytes, &record)
+
+	if err != nil {
+		return nil, chaincodeErrors.NewMarshallingError(funcName, "Record", err)
+	}
+
+	return &record, nil
 }
 
-// Read all prescriptions given by professional
+// Read all prescriptions given by specified professional
 func (s *EHRContract) readPrescriptions(ctx contractapi.TransactionContextInterface, ownerID string, professionalID string) ([]ehr_asset.Prescription, error) {
-	funcName := "ReadPrescription"
-	return nil, nil
+	// funcName := "ReadPrescription"
+
+	record, err := s.readRecord(ctx, ownerID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var prescriptions []ehr_asset.Prescription
+	for i := range record.Prescriptions {
+		if record.Prescriptions[i].ProfessionalID == professionalID {
+			prescriptions = append(prescriptions, record.Prescriptions[i])
+		}
+	}
+
+	return prescriptions, nil
 }
 
-// Read all appointments by professional
+// Read all appointments by specified professional
 func (s *EHRContract) readAppointments(ctx contractapi.TransactionContextInterface, ownerID string, professionalID string) ([]ehr_asset.Appointment, error) {
-	funcName := "ReadAppointments"
-	return nil, nil
+	// funcName := "ReadAppointments"
+
+	record, err := s.readRecord(ctx, ownerID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var appointments []ehr_asset.Appointment
+	for i := range record.Appointments {
+		if record.Appointments[i].ProfessionalID == professionalID {
+			appointments = append(appointments, record.Appointments[i])
+		}
+	}
+
+	return appointments, nil
 }
 
-// Real all procedures by professional
+// Real all procedures by specified professional
 func (s *EHRContract) readProcedures(ctx contractapi.TransactionContextInterface, ownerID string, professionalID string) ([]ehr_asset.Procedure, error) {
 	funcName := "ReadProcedures"
 	return nil, nil
@@ -238,4 +293,31 @@ func (s *EHRContract) recordExists(ctx contractapi.TransactionContextInterface, 
 	}
 
 	return response != nil, nil
+}
+
+func (s *EHRContract) isClientInAllowedList(ctx contractapi.TransactionContextInterface, ownerID string, proID string) (bool, error) {
+	funcName := "IsClientInAllowedList"
+
+	response := ctx.GetStub().InvokeChaincode("AccessList", ToChaincodeArgs("isIdentityApproved", ownerID, proID), "access_channel")
+
+	if response.GetStatus() != 200 {
+		return false, nil
+	}
+
+	payload := response.GetPayload()
+
+	if payload == nil {
+		return false, chaincodeErrors.NewGenericError(funcName, nil)
+	}
+	fmt.Print("IsclientInAllowedList payload: ", payload)
+	return true, nil
+}
+
+func ToChaincodeArgs(args ...string) [][]byte {
+	bargs := make([][]byte, len(args))
+	for i, arg := range args {
+		bargs[i] = []byte(arg)
+	}
+
+	return bargs
 }

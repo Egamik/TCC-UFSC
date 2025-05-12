@@ -3,9 +3,11 @@ package al_contract
 import (
 	"al_asset"
 	"encoding/json"
+	"fmt"
 
 	chaincodeErrors "chaincodeErrors"
 
+	"github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 	"github.com/hyperledger/fabric-contract-api-go/v2/contractapi"
 )
 
@@ -15,6 +17,11 @@ type AccessListContract struct {
 
 func (s *AccessListContract) createAsset(ctx contractapi.TransactionContextInterface, ownerID string) error {
 	funcName := "CreateAsset"
+
+	if err := verifyOwner(ctx, ownerID); err != nil {
+		return chaincodeErrors.NewForbiddenAccessError(funcName, ownerID, err)
+	}
+
 	exists, err := s.ownerExists(ctx, ownerID)
 	if err != nil {
 		return err
@@ -47,10 +54,8 @@ func (s *AccessListContract) createAsset(ctx contractapi.TransactionContextInter
 func (s *AccessListContract) addIdentity(ctx contractapi.TransactionContextInterface, ownerID string, proID string) error {
 	funcName := "addIdentity"
 
-	exists, err := s.ownerExists(ctx, ownerID)
-
-	if !exists {
-		return chaincodeErrors.NewGenericError(funcName, err)
+	if err := verifyOwner(ctx, ownerID); err != nil {
+		return chaincodeErrors.NewForbiddenAccessError(funcName, ownerID, err)
 	}
 
 	alBytes, err := ctx.GetStub().GetState(ownerID)
@@ -92,10 +97,9 @@ func (s *AccessListContract) addIdentity(ctx contractapi.TransactionContextInter
 
 func (s *AccessListContract) removeIdentity(ctx contractapi.TransactionContextInterface, ownerID string, proID string) error {
 	funcName := "RemoveIdentity"
-	exists, err := s.ownerExists(ctx, ownerID)
 
-	if !exists {
-		return chaincodeErrors.NewAssetNotFoundError(funcName, ownerID, err)
+	if err := verifyOwner(ctx, ownerID); err != nil {
+		return chaincodeErrors.NewForbiddenAccessError(funcName, ownerID, err)
 	}
 
 	var accessList al_asset.AccessList
@@ -165,19 +169,15 @@ func (s *AccessListContract) isIdentityApproved(ctx contractapi.TransactionConte
 	return false, nil
 }
 
-func (s *AccessListContract) getIdentityList(ctx contractapi.TransactionContextInterface, id string) ([]string, error) {
-	exists, err := s.ownerExists(ctx, id)
+func (s *AccessListContract) getIdentityList(ctx contractapi.TransactionContextInterface, ownerID string) ([]string, error) {
+	funcName := "GetIdentityList"
 
-	if err != nil {
-		return nil, err
-	}
-
-	if !exists {
-		return nil, nil
+	if err := verifyOwner(ctx, ownerID); err != nil {
+		return nil, chaincodeErrors.NewForbiddenAccessError(funcName, ownerID, err)
 	}
 
 	var accessList al_asset.AccessList
-	accessListJSON, err := ctx.GetStub().GetState(id)
+	accessListJSON, err := ctx.GetStub().GetState(ownerID)
 
 	if err != nil {
 		return nil, nil
@@ -202,4 +202,25 @@ func (s *AccessListContract) ownerExists(ctx contractapi.TransactionContextInter
 	}
 
 	return response != nil, nil
+}
+
+func verifyOwner(ctx contractapi.TransactionContextInterface, expectedOwnerID string) error {
+	clientIdentity, err := cid.New(ctx.GetStub())
+	if err != nil {
+		return fmt.Errorf("failed to get client identity: %v", err)
+	}
+
+	actualOwnerID, found, err := clientIdentity.GetAttributeValue("personId")
+	if err != nil {
+		return fmt.Errorf("error reading 'personId' attribute: %v", err)
+	}
+	if !found {
+		return fmt.Errorf("'personId' attribute not found in certificate")
+	}
+
+	if actualOwnerID != expectedOwnerID {
+		return fmt.Errorf("caller is not authorized: identity mismatch")
+	}
+
+	return nil
 }
