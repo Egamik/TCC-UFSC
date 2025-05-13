@@ -12,6 +12,7 @@ type EHR_Asset struct {
 	Procedures    []Procedure    `json:"procedures"`
 }
 
+// TODO: mover pra colecao privada - justificar extensao no texto
 type Prescription struct {
 	ProfessionalID string    `json:"professionalID"`
 	Date           time.Time `json:"date"`
