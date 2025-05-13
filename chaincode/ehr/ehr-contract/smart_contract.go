@@ -3,7 +3,6 @@ package ehr_contract
 import (
 	"ehr_asset"
 	"encoding/json"
-	"fmt"
 
 	chaincodeErrors "chaincodeErrors"
 
@@ -18,32 +17,23 @@ type EHRContract struct {
 func (s *EHRContract) createRecord(ctx contractapi.TransactionContextInterface, ownerID string) error {
 	// Only professionals should be able to create records
 	funcName := "CreateRecord"
-	exists, err := s.recordExists(ctx, ownerID)
 
 	// For a professional to create a record they must be authorized previously
-	issuerID, err := cid.New(ctx.GetStub())
+	allowed, err := isClientInAllowedList(ctx, ownerID)
 
-	issuerCrtID, found, err := issuerID.GetAttributeValue("personID")
+	if err != nil {
+		return err
+	}
+
+	if !allowed {
+		return chaincodeErrors.NewForbiddenAccessError(funcName, ownerID, nil)
+	}
+
+	exists, err := s.recordExists(ctx, ownerID)
 
 	if err != nil {
 		return chaincodeErrors.NewGenericError(funcName, err)
 	}
-
-	if !found {
-		return chaincodeErrors.NewGenericError(funcName, err)
-	}
-
-	alResponse := ctx.GetStub().InvokeChaincode("AccessList", ToChaincodeArgs("isIdentityApproved", ownerID, issuerCrtID), "access_chanel")
-
-	if !isAllowed {
-		return chaincodeErrors.NewForbiddenAccessError(funcName, issuerID, nil)
-	}
-
-	if err != nil {
-		// return chaincodeErrors.New
-		return nil
-	}
-
 	if exists {
 		return chaincodeErrors.NewAssetNotFoundError(funcName, ownerID, err)
 	}
@@ -67,12 +57,23 @@ func (s *EHRContract) createRecord(ctx contractapi.TransactionContextInterface, 
 		return chaincodeErrors.NewUpdateWorldStateError(funcName, err)
 	}
 
-	return err
+	return nil
 }
 
 func (s *EHRContract) addPrescription(ctx contractapi.TransactionContextInterface, ownerID string, prescriptionJSON string) error {
 	// Check if record exists
 	funcName := "AddPrescription"
+
+	allowed, err := isClientInAllowedList(ctx, ownerID)
+
+	if err != nil {
+		return err
+	}
+
+	if !allowed {
+		return chaincodeErrors.NewForbiddenAccessError(funcName, ownerID, nil)
+	}
+
 	exists, err := s.recordExists(ctx, ownerID)
 
 	if err != nil {
@@ -80,7 +81,7 @@ func (s *EHRContract) addPrescription(ctx contractapi.TransactionContextInterfac
 	}
 
 	if !exists {
-		return nil
+		return chaincodeErrors.NewReadWorldStateError(funcName, nil)
 	}
 
 	// Read record from world state
@@ -126,6 +127,17 @@ func (s *EHRContract) addPrescription(ctx contractapi.TransactionContextInterfac
 func (s *EHRContract) addAppointment(ctx contractapi.TransactionContextInterface, ownerID string, appointmentJSON string) error {
 	// Check if record exists
 	funcName := "AddAppointment"
+
+	allowed, err := isClientInAllowedList(ctx, ownerID)
+
+	if err != nil {
+		return err
+	}
+
+	if !allowed {
+		return chaincodeErrors.NewForbiddenAccessError(funcName, ownerID, nil)
+	}
+
 	exists, err := s.recordExists(ctx, ownerID)
 
 	if err != nil {
@@ -177,6 +189,17 @@ func (s *EHRContract) addAppointment(ctx contractapi.TransactionContextInterface
 
 func (s *EHRContract) addProcedure(ctx contractapi.TransactionContextInterface, ownerID string, procedureJSON string) error {
 	funcName := "AddProcedure"
+
+	allowed, err := isClientInAllowedList(ctx, ownerID)
+
+	if err != nil {
+		return err
+	}
+
+	if !allowed {
+		return chaincodeErrors.NewForbiddenAccessError(funcName, ownerID, nil)
+	}
+
 	exists, err := s.recordExists(ctx, ownerID)
 
 	if err != nil {
@@ -229,6 +252,17 @@ func (s *EHRContract) addProcedure(ctx contractapi.TransactionContextInterface, 
 // Read owner's complete record
 func (s *EHRContract) readRecord(ctx contractapi.TransactionContextInterface, ownerID string) (*ehr_asset.EHR_Asset, error) {
 	funcName := "ReadRecord"
+
+	allowed, err := isClientInAllowedList(ctx, ownerID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !allowed {
+		return nil, chaincodeErrors.NewForbiddenAccessError(funcName, ownerID, nil)
+	}
+
 	var record ehr_asset.EHR_Asset
 
 	recordBytes, err := ctx.GetStub().GetState(ownerID)
@@ -248,48 +282,41 @@ func (s *EHRContract) readRecord(ctx contractapi.TransactionContextInterface, ow
 
 // Read all prescriptions given by specified professional
 func (s *EHRContract) readPrescriptions(ctx contractapi.TransactionContextInterface, ownerID string, professionalID string) ([]ehr_asset.Prescription, error) {
-	// funcName := "ReadPrescription"
+	funcName := "ReadPrescription"
 
-	record, err := s.readRecord(ctx, ownerID)
+	asset, err := s.readRecord(ctx, ownerID)
 
 	if err != nil {
-		return nil, err
+		return nil, chaincodeErrors.NewGenericError(funcName, err)
 	}
 
-	var prescriptions []ehr_asset.Prescription
-	for i := range record.Prescriptions {
-		if record.Prescriptions[i].ProfessionalID == professionalID {
-			prescriptions = append(prescriptions, record.Prescriptions[i])
-		}
-	}
-
-	return prescriptions, nil
+	return asset.Prescriptions, nil
 }
 
 // Read all appointments by specified professional
 func (s *EHRContract) readAppointments(ctx contractapi.TransactionContextInterface, ownerID string, professionalID string) ([]ehr_asset.Appointment, error) {
-	// funcName := "ReadAppointments"
+	funcName := "ReadAppointments"
 
-	record, err := s.readRecord(ctx, ownerID)
+	asset, err := s.readRecord(ctx, ownerID)
 
 	if err != nil {
-		return nil, err
+		return nil, chaincodeErrors.NewGenericError(funcName, err)
 	}
 
-	var appointments []ehr_asset.Appointment
-	for i := range record.Appointments {
-		if record.Appointments[i].ProfessionalID == professionalID {
-			appointments = append(appointments, record.Appointments[i])
-		}
-	}
-
-	return appointments, nil
+	return asset.Appointments, nil
 }
 
 // Real all procedures by specified professional
-func (s *EHRContract) readProcedures(ctx contractapi.TransactionContextInterface, ownerID string, professionalID string) ([]ehr_asset.Procedure, error) {
+func (s *EHRContract) readProcedures(ctx contractapi.TransactionContextInterface, ownerID string) ([]ehr_asset.Procedure, error) {
 	funcName := "ReadProcedures"
-	return nil, nil
+
+	asset, err := s.readRecord(ctx, ownerID)
+
+	if err != nil {
+		return nil, chaincodeErrors.NewGenericError(funcName, err)
+	}
+
+	return asset.Procedures, nil
 }
 
 func (s *EHRContract) recordExists(ctx contractapi.TransactionContextInterface, ownerID string) (bool, error) {
@@ -303,22 +330,40 @@ func (s *EHRContract) recordExists(ctx contractapi.TransactionContextInterface, 
 	return response != nil, nil
 }
 
-func (s *EHRContract) isClientInAllowedList(ctx contractapi.TransactionContextInterface, ownerID string, proID string) (bool, error) {
+func isClientInAllowedList(ctx contractapi.TransactionContextInterface, ownerID string) (bool, error) {
 	funcName := "IsClientInAllowedList"
 
-	response := ctx.GetStub().InvokeChaincode("AccessList", ToChaincodeArgs("isIdentityApproved", ownerID, proID), "access_channel")
+	issuerID, err := cid.New(ctx.GetStub())
 
-	if response.GetStatus() != 200 {
-		return false, nil
+	issuerCertID, found, err := issuerID.GetAttributeValue("personID")
+
+	if err != nil {
+		return false, chaincodeErrors.NewGenericError(funcName, err)
 	}
 
-	payload := response.GetPayload()
+	if !found {
+		return false, chaincodeErrors.NewGenericError(funcName, err)
+	}
 
-	if payload == nil {
+	// Data owner always has access
+	if ownerID == issuerCertID {
+		return true, nil
+	}
+
+	alResponse := ctx.GetStub().InvokeChaincode("AccessList", ToChaincodeArgs("isIdentityApproved", ownerID, issuerCertID), "access_chanel")
+
+	if alResponse.Status != 200 {
 		return false, chaincodeErrors.NewGenericError(funcName, nil)
 	}
-	fmt.Print("IsclientInAllowedList payload: ", payload)
-	return true, nil
+
+	var isAllowed bool
+	err = json.Unmarshal(alResponse.Payload, &isAllowed)
+
+	if err != nil {
+		return false, chaincodeErrors.NewMarshallingError(funcName, "IsAllowed", err)
+	}
+
+	return isAllowed, nil
 }
 
 func ToChaincodeArgs(args ...string) [][]byte {
