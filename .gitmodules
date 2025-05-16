@@ -1,6 +1,0 @@
-[submodule "chaincode/ehr/minifabric"]
-	path = chaincode/ehr/minifabric
-	url = https://github.com/hyperledger-labs/minifabric
-[submodule "minifabric"]
-	path = minifabric
-	url = https://github.com/hyperledger-labs/minifabric
