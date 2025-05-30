@@ -1,4 +1,31 @@
 ---
+- name: Create export directory
+  ansible.builtin.file:
+    path: "{{ pjroot }}/vars/appFiles"
+    state: directory
+
+- name: Copy connections file
+  ansible.builtin.copy:
+    src: "{{ pjroot }}/vars/profiles/{{ CHANNEL_NAME}}_connection_for_nodesdk.json"
+    dest: "{{ pjroot }}/vars/appFiles/connection.json"
+
+- name: Ensure wallet dir exists
+  file:
+    path: "{{ pjroot }}/vars/wallet"
+    state: directory
+    mode: "0755"
+
+- name: Copy wallet id file
+  ansible.builtin.copy:
+    src: "{{ pjroot }}/vars/profiles/vscode/wallets/{{ CURRENT_ORG }}/Admin.id"
+    dest: "{{ pjroot }}/vars/appFiles/wallet/Admin.id"
+
+- name: Create placeholder active identity file (if not exists)
+  ansible.builtin.copy:
+    content: '{ "active": null }'
+    dest: "{{ pjroot }}/vars/appFiles/activeIdentity.json"
+    force: no
+
 - name: Create apprun script
   template:
     src: "{{ pjroot }}/playbooks/ops/apprun/templates/apprun_{{CC_LANGUAGE}}.j2"
@@ -7,10 +34,14 @@
 
 - name: Run the chaincode application
   command: >-
-    docker run --network {{ NETNAME }} --name apprun --hostname apprun --rm
+    docker run --network {{ NETNAME }} --name apprun --hostname apprun
+    --expose 8080
     -v /var/run/docker.sock:/var/run/docker.sock
     -v {{ hostroot }}/vars:/vars
     -v {{ hostroot }}/vars/app/{{CC_LANGUAGE}}:/go/src/github.com/app
+    -v {{ hostroot }}/vars/appFiles/wallet:/usr/src/app/fabric/wallet
+    -v {{ hostroot }}/vars/appFiles/connection-profile.json:/usr/src/app/fabric/connection-profile.json
+    -v {{ hostroot }}/vars/appFiles/activeIdentity.json:/usr/src/app/activeIdentity.json
     --entrypoint /vars/run/apprun.sh
     {{ LANGUAGEENVS[CC_LANGUAGE] }}
   register: runstates

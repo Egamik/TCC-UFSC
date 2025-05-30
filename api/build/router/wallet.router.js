@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const wallets_controller_js_1 = require("../controller/wallets.controller.js");
+const router = (0, express_1.Router)();
+router.post('/', wallets_controller_js_1.createIdentity);
+router.post('/active', wallets_controller_js_1.setActiveIdentity);
+router.get('/active', wallets_controller_js_1.getActiveIdentity);
+router.get('/list', wallets_controller_js_1.listIdentities);
+exports.default = router;
